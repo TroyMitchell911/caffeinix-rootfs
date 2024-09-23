@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "chrono": "c",
+        "random": "c",
+        "*.tcc": "c",
+        "algorithm": "c",
+        "mystring.h": "c",
+        "environ.h": "c",
+        "fcntl.h": "c",
+        "user.h": "c",
+        "cstring": "c",
+        "fs.h": "c",
+        "typedefs.h": "c",
+        "inode.h": "c"
+    }
+}
