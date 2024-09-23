@@ -5,6 +5,3 @@ all: mkfs.c
 
 clean:
 	@rm -f ./mkfs
-
-distclean: clean
-	@rm -f fs.img

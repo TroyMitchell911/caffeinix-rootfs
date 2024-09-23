@@ -69,7 +69,7 @@ build:
 
 fs.img: LICENSE $(UPROGS)
 	make -C ./mkfs/ all
-	mkfs/mkfs mkfs/fs.img LICENSE $(UPROGS)
+	mkfs/mkfs fs.img LICENSE $(UPROGS)
 
 all : user_build fs.img
 	@echo "rootfs has been built!"
@@ -88,4 +88,4 @@ clean:
 distclean: clean
 	@rm -f compile_commands.json
 	@make -C ./user/ distclean
-	@make -C ./mkfs/ distclean
+	@rm -f fs.img
