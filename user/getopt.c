@@ -617,6 +617,7 @@ getopt (argc, argv, optstring)
      char *const *argv;
      const char *optstring;
 {
+  optind = 0;
   return _getopt_internal (argc, argv, optstring,
 			   (const struct option *) 0,
 			   (int *) 0,
