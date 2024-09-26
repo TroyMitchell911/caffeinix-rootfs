@@ -130,15 +130,9 @@ int main(int argc, char **argv)
                 return -1;
         }
 
-        dst_index = argc - 1;
-        src_index = dst_index - 1;
-
-        if(stat(argv[src_index], &st) < 0) {
-                printf(TAG"cannot stat '%s': No such file or directory\n", argv[1]);
-                return -1;
-        }
-
         clean_flag();
+
+        getopt_init();
 
         while ((opt = getopt(argc, argv, "rf")) != -1) {
                 switch(opt) {
@@ -150,10 +144,18 @@ int main(int argc, char **argv)
                 }
         }
 
+        dst_index = optind + 1;
+        src_index = dst_index - 1;
+
+        if(stat(argv[src_index], &st) < 0) {
+                printf(TAG"cannot stat '%s': No such file or directory\n", argv[src_index]);
+                return -1;
+        }
+
         if(st.type == T_DIR) {
                 if(recursive_flag)
                         return cp_dir(argv[src_index], argv[dst_index]);
-                printf(TAG"target '%s' is a directory, but the -r option is not specified\n", argv[1]);
+                printf(TAG"target '%s' is a directory, but the -r option is not specified\n", argv[src_index]);
                 return -1;
         } else {
                 return cp(argv[src_index], argv[dst_index]);
