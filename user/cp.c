@@ -1,8 +1,8 @@
 /*
  * @Date: 2024-09-12
  * @LastEditors: GoKo-Son626
- * @LastEditTime: 2024-09-19
- * @FilePath: /caffeinix/user/cp.c
+ * @LastEditTime: 2024-09-26
+ * @FilePath: /caffeinix-rootfs/user/cp.c
  * @Description: 
  */
 #include "user.h"
@@ -91,7 +91,7 @@ static int cp_dir(char *src, char *dst)
                 if(n != sizeof(struct dirent))
                         goto r1;
 
-                if(dirent.name[0] == '.' || dirent.name[1] == '.')
+                if (strcmp(dirent.name, ".") == 0 || strcmp(dirent.name, "..") == 0)
                         continue;
 
                 strcpy(src_path, src);
