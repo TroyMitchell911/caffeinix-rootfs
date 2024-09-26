@@ -72,9 +72,11 @@ static int cp_dir(char *src, char *dst)
         struct stat st;
         struct dirent dirent;
 
-        if(mkdir(dst) < 0) {
-                printf(TAG"cannot create dirctory %s: No such file or directory\n");
-                return ret;
+        if(stat(dst, &st) < 0) {
+               if(mkdir(dst) < 0) {
+                        printf(TAG"cannot create dirctory %s: No such file or directory\n");
+                        return ret;
+                }
         }
 
         sfd = open(src, O_RDONLY);
