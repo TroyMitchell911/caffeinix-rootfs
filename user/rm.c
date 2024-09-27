@@ -113,27 +113,29 @@ int main(int argc, char **argv)
         while ((opt = getopt(argc, argv, "r")) != -1) {
                 switch (opt) {
                 case 'r':
-                        recursive_flag = 1;
-                        break;
+                recursive_flag = 1;
+                break;
                 default:
-                        clean_flag();
-                        break;
+                clean_flag();
+                break;
                 }
         }
         
         for (i = optind; i < argc; i++) {
                 if (stat(argv[i], &st) < 0) {
-                        printf(TAG"cannot stat '%s'\n", argv[i]);
+                        printf(TAG"can't remove '%s':No such file or directory\n", argv[i]);
                         continue;
                 }
 
                 if (st.type == T_DIR) {
                         if (!recursive_flag) {
-                                printf(TAG"cannot remove '%s': Is a directory\n", argv[i]);
-                        } else 
+                                printf(TAG"can't remove '%s': Is a directory\n", argv[i]);
+                        } else {
                                 return rm_dir(argv[i]);
-                } else 
-                      return rm_file(argv[i]);
+                        }
+                } else {
+                        return rm_file(argv[i]);
+                }
         }
         return 0;
 }
