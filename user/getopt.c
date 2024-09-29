@@ -623,11 +623,6 @@ getopt (argc, argv, optstring)
 			   0);
 }
 
-void getopt_init(void)
-{
-  optind = 0;
-}
-
 #ifdef TEST
 
 /* Compile with -DTEST to make an executable for use in testing
