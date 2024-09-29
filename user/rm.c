@@ -107,9 +107,6 @@ int main(int argc, char **argv)
                 return -1;
         }
 
-        clean_flag();
-        getopt_init();
-
         while ((opt = getopt(argc, argv, "r")) != -1) {
                 switch (opt) {
                 case 'r':
