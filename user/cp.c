@@ -122,11 +122,6 @@ int main(int argc, char **argv)
         int opt;
         int src_index, dst_index;
 
-        if(argc < 3) {
-                printf(TAG"missing operand\n");
-                return -1;
-        }
-
         while ((opt = getopt(argc, argv, "rf")) != -1) {
                 switch(opt) {
                         case 'r':
@@ -139,6 +134,11 @@ int main(int argc, char **argv)
 
         dst_index = optind + 1;
         src_index = dst_index - 1;
+
+	if(argc <= dst_index || argc <= src_index) {
+                printf(TAG"missing operand\n");
+                return -1;
+        }
 
         if(stat(argv[src_index], &st) < 0) {
                 printf(TAG"cannot stat '%s': No such file or directory\n", argv[src_index]);
