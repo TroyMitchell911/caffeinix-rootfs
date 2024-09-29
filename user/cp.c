@@ -15,11 +15,6 @@
 
 static int recursive_flag = 0;
 
-static void clean_flag(void)
-{
-        recursive_flag = 0;
-}
-
 static void append_file(char *path, char *file)
 {
         int path_len, file_len;
@@ -131,8 +126,6 @@ int main(int argc, char **argv)
                 printf(TAG"missing operand\n");
                 return -1;
         }
-
-        clean_flag();
 
         while ((opt = getopt(argc, argv, "rf")) != -1) {
                 switch(opt) {
