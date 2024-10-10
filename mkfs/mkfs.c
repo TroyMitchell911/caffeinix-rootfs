@@ -1,3 +1,4 @@
+#include "fs.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -258,8 +259,10 @@ void iappend(uint inum, void *xp, int n)
         uint fbn, off, n1;
         struct dinode din;
         char buf[BSIZE];
-        uint indirect[NINDIRECT];
+        uint indirect[INDIRECT_BLOCK];
         uint x;
+	uint indirect_idx;
+	uint indirect_block;
 
         rinode(inum, &din);
         off = xint(din.size);
@@ -273,15 +276,20 @@ void iappend(uint inum, void *xp, int n)
                         }
                         x = xint(din.addrs[fbn]);
                 } else {
-                        if(xint(din.addrs[NDIRECT]) == 0) {
-                                din.addrs[NDIRECT] = xint(freeblock++);
+			indirect_idx = (fbn - NDIRECT) / INDIRECT_BLOCK;
+			indirect_block = (fbn - NDIRECT) % INDIRECT_BLOCK; 
+
+			indirect_idx += NDIRECT;
+
+                        if(xint(din.addrs[indirect_idx]) == 0) {
+                                din.addrs[indirect_idx] = xint(freeblock++);
                         }
-                        rsect(xint(din.addrs[NDIRECT]), (char*)indirect);
-                        if(indirect[fbn - NDIRECT] == 0) {
-                                indirect[fbn - NDIRECT] = xint(freeblock++);
-                                wsect(xint(din.addrs[NDIRECT]), (char*)indirect);
+                        rsect(xint(din.addrs[indirect_idx]), (char*)indirect);
+                        if(indirect[indirect_block] == 0) {
+                                indirect[indirect_block] = xint(freeblock++);
+                                wsect(xint(din.addrs[indirect_idx]), (char*)indirect);
                         }
-                        x = xint(indirect[fbn-NDIRECT]);
+                        x = xint(indirect[indirect_block]);
                 }
 
                 n1 = min(n, (fbn + 1) * BSIZE - off);
