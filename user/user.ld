@@ -1,5 +1,5 @@
 OUTPUT_ARCH( "riscv" )
-ENTRY( _main )
+ENTRY( _start )
 
 
 SECTIONS
@@ -23,6 +23,7 @@ SECTIONS
     *(.sdata .sdata.*) /* do not need to distinguish this from .data */
     . = ALIGN(16);
     *(.data .data.*)
+    _edata = .;
   }
 
   .bss : {
@@ -30,7 +31,9 @@ SECTIONS
     *(.sbss .sbss.*) /* do not need to distinguish this from .bss */
     . = ALIGN(16);
     *(.bss .bss.*)
+    _end = .;
   }
 
   PROVIDE(end = .);
+  PROVIDE(__global_pointer$ = . + 0x800);  /* 定义 global pointer */
 }

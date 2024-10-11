@@ -1,5 +1,5 @@
 ifndef CROSS_COMPILE
-CROSS_COMPILE := riscv64-unknown-linux-gnu-
+CROSS_COMPILE := riscv64-caffeinix-
 endif
 
 AS		= $(CROSS_COMPILE)gas
@@ -18,10 +18,10 @@ OUTPUT = output
 export AS LD CC CPP AR NM
 export STRIP OBJCOPY OBJDUMP
 
-CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb -gdwarf-2
+CFLAGS = -Wall -O -fno-omit-frame-pointer -ggdb -gdwarf-2
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
-CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
+CFLAGS += -fno-common -mno-relax
 CFLAGS += -I.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
@@ -41,7 +41,8 @@ export TOPDIR
 
 UPROGS = \
 	$(TOPDIR)/user/_init \
-	$(TOPDIR)/user/_sh \
+	 # uncomment this one by one
+	#$(TOPDIR)/user/_sh \
 	$(TOPDIR)/user/_tuser \
 	$(TOPDIR)/user/_ls \
 	$(TOPDIR)/user/_mkdir \
