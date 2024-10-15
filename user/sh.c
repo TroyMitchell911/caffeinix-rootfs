@@ -8,10 +8,13 @@
  * Words are cheap so I do.
  * Copyright (c) 2024 by TroyMitchell, All Rights Reserved. 
  */
-#include "user.h"
-#include "fcntl.h"
-#include "stat.h"
-#include "environ.h"
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/wait.h>
 
 #define SH_BUF_MAX                      128
 
@@ -37,60 +40,11 @@ typedef struct execcmd {
 
 static const char whitespace[] = " \t\r\n\v";
 static const char symbols[] = "<|>&;()";
-static char *environ = 0;
-
-static int createenv(void)
-{
-        setenv("PATH", "/");
-        environ = getenv("PATH");
-        return environ == 0 ? -1 : 0;
-}
-
-static int parseenv(int fd, uint64 sz)
-{
-        return 0;
-}
-
-static int readenv(void)
-{
-        int fd;
-        struct stat st;
-
-        init_env();
-
-        fd = open(ENVIRON_FILE, O_RDONLY);
-        if(fd != -1) {
-read:
-                /* Read environment here */
-                if(createenv() < 0)
-                        goto r1;
-                        
-                /* Get the file size and malloc the memory base on the file size */
-                if(stat(ENVIRON_FILE, &st) < 0)
-                        goto r1;
-
-                /* Parse environment variables */
-                if(parseenv(fd, st.size) < 0) 
-                        goto r1;
-
-                return 0;
-        }
-        fd = open(ENVIRON_FILE, O_CREATE | O_RDWR);
-        if(fd != -1)
-                goto read; 
-        else
-                goto r0;
-
-r1:
-        close(fd);
-r0:
-        return -1;
-}
 
 static void panic(char *s)
 {
-        fprintf(2, "%s\n", s);
-        exit(1);
+        fprintf(stderr, "%s\n", s);
+        _exit(1);
 }
 
 static cmd_t nulterminate(cmd_t cmd)
@@ -251,7 +205,6 @@ static cmd_t parsecmd(char* s)
 static void runcmd(cmd_t cmd)
 {
         execcmd_t ecmd;
-        char buf[1024];
 
         if(cmd == 0)
                 exit(1);
@@ -261,13 +214,8 @@ static void runcmd(cmd_t cmd)
                         ecmd = (execcmd_t)cmd;
                         if(ecmd->argv[0] == 0)
                                 exit(1);
-                        strcpy(buf, ecmd->argv[0]);
-                        exec(buf, ecmd->argv);
-                        strcpy(buf, environ);
-                        strcat(buf, ecmd->argv[0]);
-                        // printf("exec %s failed so exec %s\n", ecmd->argv[0], buf);
-                        exec(buf, ecmd->argv);
-                        fprintf(2, "%s: command not found\n", ecmd->argv[0]);
+                        exec(ecmd->argv[0], ecmd->argv);
+                        fprintf(stderr, "%s: command not found\n", ecmd->argv[0]);
                         break;
         }
 }
@@ -277,8 +225,9 @@ static int getcmd(char* buf, int max)
         if(getcwd(cwd, 1024)) {
                 return -1;
         }
-        printf("%s$ ", cwd);
-        gets(buf, max);
+        fprintf(stdout, "%s$ ", cwd);
+	fflush(stdout);
+        fgets(buf, max, stdin);
         if(buf[0] == 0)
                 return -1;
         return 0;
@@ -300,16 +249,13 @@ int main(void)
                 exit(-1);
         }
 
-        if(readenv())
-                panic("sh: failed read env"); 
-
         while(getcmd(buf, SH_BUF_MAX) >= 0) {
                 if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' ') {
                         /* Delete '\n' */
                         buf[strlen(buf) - 1] = '\0';
 
                         if(chdir(buf + 3) < 0)
-                                fprintf(2, "cd: %s: No such file or directory\n", buf + 3);
+                                fprintf(stderr, "cd: %s: No such file or directory\n", buf + 3);
 
                         continue;
                 }
