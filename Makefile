@@ -44,9 +44,8 @@ UPROGS = \
 	$(TOPDIR)/user/_sh \
 	$(TOPDIR)/user/_touch \
 	$(TOPDIR)/user/_tuser \
+	$(TOPDIR)/user/_cat \
 #	$(TOPDIR)/user/_ls \
-	 # uncomment this one by one
-#	$(TOPDIR)/user/_cat \
 	$(TOPDIR)/user/_mkdir \
 	$(TOPDIR)/user/_cp \
 	$(TOPDIR)/user/_rm \
