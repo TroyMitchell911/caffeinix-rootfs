@@ -8,29 +8,11 @@
  * Words are cheap so I do.
  * Copyright (c) 2024 by TroyMitchell, All Rights Reserved. 
  */
-
-#include "user.h"
-#include "fcntl.h"
-#include "environ.h"
-#include <getopt.h>
+#include <stdio.h>
 
 int main(int argc, char *argv[])
 {
-        int opt;
-
         printf("caffeinix-rootfs: test user program!\n");
-
-        while ((opt = getopt(argc, argv, "rf")) != -1) {
-        switch (opt) {
-            case 'r':
-                printf("Option -a selected\n");
-                break;
-            case 'f':
-                printf("Option -b selected\n");
-                break;
-            default:
-                printf("Unknown option: %c\n", opt);
-        }
-    }
-        return 0;
+        
+	return 0;
 }
