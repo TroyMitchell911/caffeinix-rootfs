@@ -24,7 +24,7 @@
 /* Which block is used by superblock */
 #define SUPERBLOCK_NUM                  1
 /* How many blocks file-system used */
-#define FSSIZE                          2000
+#define FSSIZE                          20000
 #define MAXFILE                         (NDIRECT + NINDIRECT)
 
 #define NDIRECT                         (32)
