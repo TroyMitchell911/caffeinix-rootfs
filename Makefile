@@ -47,8 +47,8 @@ UPROGS = \
 	$(TOPDIR)/user/_cat \
 	$(TOPDIR)/user/_mkdir \
 	$(TOPDIR)/user/_pwd \
-#	$(TOPDIR)/user/_ls \
-	$(TOPDIR)/user/_cp \
+	$(TOPDIR)/user/_ls \
+#	$(TOPDIR)/user/_cp \
 	$(TOPDIR)/user/_rm \
 
 export UPROGS
