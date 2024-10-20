@@ -5,11 +5,12 @@
  * @FilePath: /caffeinix-rootfs/user/rm.c
  * @Description: 
  */
-#include "user.h"
-#include "stat.h"
-#include "fcntl.h"
-#include "getopt.h"
-#include "dirent.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <dirent.h>
 
 #define TAG                     "rm: "
 
@@ -36,7 +37,7 @@ static void append_file(char *path, char *file)
 static int rm_file(char *path)
 {
         if (unlink(path) < 0) {
-                printf(TAG"cannot remove '%s': No such file or directory\n", path);
+                fprintf(stderr, TAG"cannot remove '%s': No such file or directory\n", path);
                 return -1;
         }
 
@@ -50,7 +51,7 @@ static int rm_dir(char *path)
 
         fd = open(path, O_RDONLY);
         if (!fd) {
-                printf(TAG"cannot open directory '%s'\n", path);
+                fprintf(stderr, TAG"cannot open directory '%s'\n", path);
                 return -1;
         }
 
@@ -68,11 +69,11 @@ static int rm_dir(char *path)
 
                 struct stat st;
                 if (stat(sub_path, &st) < 0) {
-                        printf(TAG"cannot stat '%s': No such file\n", sub_path);
+                        fprintf(stderr, TAG"cannot stat '%s': No such file\n", sub_path);
                         continue; 
                 }
 
-                if (st.type == T_DIR) {
+                if (S_ISDIR(st.st_mode)) {
                         if (rm_dir(sub_path) < 0) {
                                 goto r1;
                         }
@@ -86,7 +87,7 @@ static int rm_dir(char *path)
         close(fd);
 
         if (unlink(path) < 0) {
-                printf(TAG"cannot remove directory '%s'\n", path);
+                fprintf(stderr, TAG"cannot remove directory '%s'\n", path);
                 goto r1;;
         }
 
@@ -103,7 +104,7 @@ int main(int argc, char **argv)
         struct stat st;
 
         if(argc < 2) {
-                printf(TAG"missing operand\n");
+                fprintf(stderr, TAG"missing operand\n");
                 return -1;
         }
 
@@ -120,13 +121,13 @@ int main(int argc, char **argv)
         
         for (i = optind; i < argc; i++) {
                 if (stat(argv[i], &st) < 0) {
-                        printf(TAG"can't remove '%s':No such file or directory\n", argv[i]);
+                        fprintf(stderr, TAG"can't remove '%s':No such file or directory\n", argv[i]);
                         continue;
                 }
 
-                if (st.type == T_DIR) {
+                if (S_ISDIR(st.st_mode)) {
                         if (!recursive_flag) {
-                                printf(TAG"can't remove '%s': Is a directory\n", argv[i]);
+                                fprintf(stderr, TAG"can't remove '%s': Is a directory\n", argv[i]);
                         } else {
                                 return rm_dir(argv[i]);
                         }
