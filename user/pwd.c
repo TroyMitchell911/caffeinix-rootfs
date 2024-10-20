@@ -5,7 +5,8 @@
  * @FilePath: /caffeinix/user/pwd.c
  * @Description: Words are cheap so I do.
  */
-#include "user.h"
+#include <stdio.h>
+#include <unistd.h>
 
 #define MAXPATH                 128
 

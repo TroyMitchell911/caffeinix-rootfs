@@ -46,10 +46,10 @@ UPROGS = \
 	$(TOPDIR)/user/_tuser \
 	$(TOPDIR)/user/_cat \
 	$(TOPDIR)/user/_mkdir \
+	$(TOPDIR)/user/_pwd \
 #	$(TOPDIR)/user/_ls \
 	$(TOPDIR)/user/_cp \
 	$(TOPDIR)/user/_rm \
-	$(TOPDIR)/user/_pwd \
 
 export UPROGS
 
