@@ -49,7 +49,7 @@ UPROGS = \
 	$(TOPDIR)/user/_pwd \
 	$(TOPDIR)/user/_ls \
 	$(TOPDIR)/user/_cp \
-#	$(TOPDIR)/user/_rm \
+	$(TOPDIR)/user/_rm \
 
 export UPROGS
 
