@@ -5,11 +5,12 @@
  * @FilePath: /caffeinix-rootfs/user/cp.c
  * @Description: 
  */
-#include "user.h"
-#include "fcntl.h"
-#include "stat.h"
-#include "dirent.h"
-#include "getopt.h"
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <string.h>
+#include <unistd.h>
 
 #define TAG                     "cp: "
 
@@ -35,19 +36,19 @@ static int cp(char *src, char *dst)
 
         sfd = open(src, O_RDONLY);
         if(!sfd) {
-                printf(TAG"cannot stat '%s': No such file or directory\n", src);
+                fprintf(stderr, TAG"cannot stat '%s': No such file or directory\n", src);
                 return ret;
         }
 
-        dfd = open(dst, O_WRONLY | O_CREATE | O_TRUNC);
+        dfd = open(dst, O_WRONLY | O_CREAT | O_TRUNC);
         if(!dfd) {
-                printf(TAG"cannot create '%s'\n", dst);
+                fprintf(stderr, TAG"cannot create '%s'\n", dst);
                 goto r1;
         }
 
         while((n = read(sfd, buf, 1024)) > 0) {
                 if((n = write(dfd, buf, 1024)) < 0) {
-                        printf(TAG"write '%s' failed\n", dst);
+                        fprintf(stderr, TAG"write '%s' failed\n", dst);
                         goto r2;
                 }
         }
@@ -68,15 +69,15 @@ static int cp_dir(char *src, char *dst)
         struct dirent dirent;
 
         if(stat(dst, &st) < 0) {
-               if(mkdir(dst) < 0) {
-                        printf(TAG"cannot create dirctory %s: No such file or directory\n");
+               if(mkdir(dst, S_IREAD | S_IWRITE) < 0) {
+                        fprintf(stderr, TAG"cannot create dirctory %s: No such file or directory\n", dst);
                         return ret;
                 }
         }
 
         sfd = open(src, O_RDONLY);
         if(!sfd) {
-                printf(TAG"cannot open directory '%s'\n", src);
+                fprintf(stderr, TAG"cannot open directory '%s'\n", src);
                 return ret;
         }
 
@@ -95,11 +96,11 @@ static int cp_dir(char *src, char *dst)
                 append_file(dst_path, dirent.name);
 
                 if(stat(src_path, &st) < 0) {
-                        printf(TAG"cannot stat '%s': No such file\n", src);
+                        fprintf(stderr, TAG"cannot stat '%s': No such file\n", src);
                         goto r1;
                 }
 
-                if(st.type == T_DIR)
+                if(st.st_mode == _IFDIR)
                         ret = cp_dir(src_path, dst_path);
                 else
                         ret = cp(src_path, dst_path);
@@ -136,19 +137,19 @@ int main(int argc, char **argv)
         src_index = dst_index - 1;
 
 	if(argc <= dst_index || argc <= src_index) {
-                printf(TAG"missing operand\n");
+                fprintf(stderr, TAG"missing operand\n");
                 return -1;
         }
 
         if(stat(argv[src_index], &st) < 0) {
-                printf(TAG"cannot stat '%s': No such file or directory\n", argv[src_index]);
+                fprintf(stderr, TAG"cannot stat '%s': No such file or directory\n", argv[src_index]);
                 return -1;
         }
 
-        if(st.type == T_DIR) {
+        if(st.st_mode == _IFDIR) {
                 if(recursive_flag)
                         return cp_dir(argv[src_index], argv[dst_index]);
-                printf(TAG"target '%s' is a directory, but the -r option is not specified\n", argv[src_index]);
+                fprintf(stderr, TAG"target '%s' is a directory, but the -r option is not specified\n", argv[src_index]);
                 return -1;
         } else {
                 return cp(argv[src_index], argv[dst_index]);
