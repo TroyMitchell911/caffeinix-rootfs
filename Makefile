@@ -75,6 +75,7 @@ clean:
 	@rm -f $(shell find -name "*.d")
 	@make -C ./user/ clean
 	@make -C ./mkfs/ clean
+	@rm -f fs.img
 
 distclean: clean
 	@rm -f compile_commands.json
