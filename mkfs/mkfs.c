@@ -132,29 +132,30 @@ int main(int argc, char *argv[])
         strcpy(de.name, "..");
         iappend(rootino, &de, sizeof(de));
 
-        for(i = 2; i < argc; i++) {
-                // get rid of "user/"
-                char *shortname = strstr(argv[i], "user/");
+	/* Linux starts init with standard descriptors attached to the console. */
+	inum = ialloc_mkfs(T_DEVICE);
+	rinode(inum, &din);
+	din.major = xshort(1);
+	din.minor = xshort(0);
+	winode(inum, &din);
+	bzero_mkfs(&de, sizeof(de));
+	de.inum = xshort(inum);
+	strcpy(de.name, "console");
+	iappend(rootino, &de, sizeof(de));
 
-                if(!shortname) {
-                        shortname = argv[i];
-                } else
-                        shortname += 5;
+        for(i = 2; i < argc; i++) {
+                char *shortname = strrchr(argv[i], '/');
+
+		if(shortname)
+			shortname++;
+		else
+			shortname = argv[i];
 
                 printf("shortname:%s\n", shortname);
                 assert(strchr(shortname, '/') == 0);
 
                 if((fd = open(argv[i], 0)) < 0)
                         die(argv[i]);
-
-                /*
-                        Skip leading _ in name when writing to file system.
-                        The binaries are named _rm, _cat, etc. to keep the
-                        build operating system from trying to execute them
-                        in place of system binaries like rm and cat.
-                */
-                if(shortname[0] == '_')
-                        shortname += 1;
 
                 inum = ialloc_mkfs(T_FILE);
 
