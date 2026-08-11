@@ -132,6 +132,17 @@ int main(int argc, char *argv[])
         strcpy(de.name, "..");
         iappend(rootino, &de, sizeof(de));
 
+	/* Linux starts init with standard descriptors attached to the console. */
+	inum = ialloc_mkfs(T_DEVICE);
+	rinode(inum, &din);
+	din.major = xshort(1);
+	din.minor = xshort(0);
+	winode(inum, &din);
+	bzero_mkfs(&de, sizeof(de));
+	de.inum = xshort(inum);
+	strcpy(de.name, "console");
+	iappend(rootino, &de, sizeof(de));
+
         for(i = 2; i < argc; i++) {
                 // get rid of "user/"
                 char *shortname = strstr(argv[i], "user/");
