@@ -1,83 +1,73 @@
-ifndef CROSS_COMPILE
-CROSS_COMPILE := riscv64-caffeinix-
-endif
+CROSS_COMPILE ?= riscv64-linux-gnu-
+MUSL_SYSROOT ?=
+BUSYBOX_DIR ?=
+MUSL_SYSROOT_ABS = $(abspath $(MUSL_SYSROOT))
+BUSYBOX_DIR_ABS = $(abspath $(BUSYBOX_DIR))
+MUSL_CC ?= $(MUSL_SYSROOT_ABS)/bin/musl-gcc
+MKFS := mkfs/mkfs
+MKFS_SOURCES := mkfs/mkfs.c $(wildcard mkfs/include/*.h) \
+	$(wildcard include/*.h)
+BUSYBOX_STATE := .busybox-configured
 
-AS		= $(CROSS_COMPILE)gas
-LD		= $(CROSS_COMPILE)ld
-CC		= $(CROSS_COMPILE)gcc
-CPP		= $(CC) -E
-AR		= $(CROSS_COMPILE)ar
-NM		= $(CROSS_COMPILE)nm
+.PHONY: all check-inputs configure-busybox busybox clean
 
-STRIP		= $(CROSS_COMPILE)strip
-OBJCOPY		= $(CROSS_COMPILE)objcopy
-OBJDUMP		= $(CROSS_COMPILE)objdump
+all: fs.img
 
-OUTPUT = output
+check-inputs:
+	@test -n "$(MUSL_SYSROOT)" || { \
+		echo "MUSL_SYSROOT is required"; exit 1; \
+	}
+	@test -x "$(MUSL_CC)" || { \
+		echo "missing musl compiler at $(MUSL_CC)"; exit 1; \
+	}
+	@test -f "$(MUSL_SYSROOT_ABS)/lib/libc.a" || { \
+		echo "missing libc.a in $(MUSL_SYSROOT_ABS)"; exit 1; \
+	}
+	@test -n "$(BUSYBOX_DIR)" || { \
+		echo "BUSYBOX_DIR is required"; exit 1; \
+	}
+	@test -f "$(BUSYBOX_DIR_ABS)/Makefile" || { \
+		echo "missing BusyBox source at $(BUSYBOX_DIR_ABS)"; exit 1; \
+	}
+	@for tool_name in ar ld nm objcopy ranlib strip; do \
+		command -v "$(CROSS_COMPILE)$$tool_name" >/dev/null || { \
+			echo "missing $(CROSS_COMPILE)$$tool_name"; exit 1; \
+		}; \
+	done
 
-export AS LD CC CPP AR NM
-export STRIP OBJCOPY OBJDUMP
+configure-busybox: check-inputs
+	@set -e; \
+	busybox_path="$(BUSYBOX_DIR_ABS)"; \
+	if [ ! -f "$(BUSYBOX_STATE)" ] || \
+	   [ "$$(sed -n '1p' "$(BUSYBOX_STATE)")" != "$$busybox_path" ] || \
+	   [ busybox.config -nt "$(BUSYBOX_STATE)" ] || \
+	   [ Makefile -nt "$(BUSYBOX_STATE)" ]; then \
+		$(MAKE) -C "$$busybox_path" distclean; \
+		$(MAKE) -C "$$busybox_path" allnoconfig >/dev/null; \
+		while IFS= read -r setting; do \
+			symbol=$${setting%%=*}; \
+			sed -i "s|^# $$symbol is not set$$|$$setting|; \
+				s|^$$symbol=.*|$$setting|" \
+				"$$busybox_path/.config"; \
+		done < busybox.config; \
+		yes '' | $(MAKE) -C "$$busybox_path" oldconfig >/dev/null; \
+		printf '%s\n' "$$busybox_path" > "$(BUSYBOX_STATE)"; \
+	fi
 
-CFLAGS = -Wall -O -fno-omit-frame-pointer -ggdb -gdwarf-2
-CFLAGS += -MD
-CFLAGS += -mcmodel=medany
-CFLAGS += -fno-common -mno-relax
-CFLAGS += -I.
-CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
+busybox: configure-busybox
+	$(MAKE) -C "$(BUSYBOX_DIR_ABS)" ARCH=riscv \
+		CROSS_COMPILE="$(CROSS_COMPILE)" CC="$(MUSL_CC)"
 
-# Disable PIE when possible (for Ubuntu 16.10 toolchain)
-ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
-CFLAGS += -fno-pie -no-pie
-endif
-ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]nopie'),)
-CFLAGS += -fno-pie -nopie
-endif
+$(MKFS): $(MKFS_SOURCES)
+	$(MAKE) -C mkfs all
 
-LDFLAGS = -z max-page-size=4096
-export CFLAGS LDFLAGS
-
-TOPDIR := $(shell pwd)
-export TOPDIR
-
-UPROGS = \
-	$(TOPDIR)/user/_init \
-	$(TOPDIR)/user/_sh \
-	$(TOPDIR)/user/_touch \
-	$(TOPDIR)/user/_tuser \
-	$(TOPDIR)/user/_cat \
-	$(TOPDIR)/user/_mkdir \
-	$(TOPDIR)/user/_pwd \
-	$(TOPDIR)/user/_ls \
-	$(TOPDIR)/user/_cp \
-	$(TOPDIR)/user/_rm \
-
-export UPROGS
-
-TARGET := $(OUTPUT)/kernel
-
-build:
-	bear -- make all
-
-fs.img: LICENSE $(UPROGS)
-	make -C ./mkfs/ all
-	mkfs/mkfs fs.img LICENSE $(UPROGS)
-
-all : user_build fs.img
-	@echo "rootfs has been built!"
-
-user_build:
-	make -C ./user/ all
+fs.img: LICENSE busybox $(MKFS)
+	$(MKFS) $@ LICENSE "$(BUSYBOX_DIR_ABS)/busybox"
 
 clean:
-	@rm -f $(shell find -name "*.o")
-	@rm -f $(shell find -name "*.asm")
-	@rm -f $(shell find -name "*.sym")
-	@rm -f $(shell find -name "*.d")
-	@make -C ./user/ clean
-	@make -C ./mkfs/ clean
-	@rm -f fs.img
-
-distclean: clean
-	@rm -f compile_commands.json
-	@make -C ./user/ distclean
-	@rm -f fs.img
+	$(MAKE) -C mkfs clean
+	@if [ -n "$(BUSYBOX_DIR)" ] && \
+	   [ -d "$(BUSYBOX_DIR_ABS)" ]; then \
+		$(MAKE) -C "$(BUSYBOX_DIR_ABS)" distclean; \
+	fi
+	$(RM) $(BUSYBOX_STATE) fs.img

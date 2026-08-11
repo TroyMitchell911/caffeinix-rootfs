@@ -144,28 +144,18 @@ int main(int argc, char *argv[])
 	iappend(rootino, &de, sizeof(de));
 
         for(i = 2; i < argc; i++) {
-                // get rid of "user/"
-                char *shortname = strstr(argv[i], "user/");
+                char *shortname = strrchr(argv[i], '/');
 
-                if(!shortname) {
-                        shortname = argv[i];
-                } else
-                        shortname += 5;
+		if(shortname)
+			shortname++;
+		else
+			shortname = argv[i];
 
                 printf("shortname:%s\n", shortname);
                 assert(strchr(shortname, '/') == 0);
 
                 if((fd = open(argv[i], 0)) < 0)
                         die(argv[i]);
-
-                /*
-                        Skip leading _ in name when writing to file system.
-                        The binaries are named _rm, _cat, etc. to keep the
-                        build operating system from trying to execute them
-                        in place of system binaries like rm and cat.
-                */
-                if(shortname[0] == '_')
-                        shortname += 1;
 
                 inum = ialloc_mkfs(T_FILE);
 

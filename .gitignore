@@ -10,7 +10,5 @@
 /.cache
 compile_commands.json
 /mkfs/mkfs
-/user/usys.S
-/user/_*
-/user/initcode
 /*.img
+/.busybox-configured
